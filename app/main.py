@@ -15,6 +15,15 @@ def create_app():
     app = Antigravity(__name__)
     # Ensure database tables exist on startup (avoids "no such table" errors in fresh deployments)
     Base.metadata.create_all(bind=engine)
+    # Optional: allow seeding the database during deployment when SEED_DB=1 is set
+    if os.getenv('SEED_DB') == '1':
+        try:
+            # import locally to avoid circular import issues at module import time
+            from init_db import init as _init_db
+            _init_db()
+            app.logger.info('SEED_DB: database seeded.')
+        except Exception as _e:
+            app.logger.exception('SEED_DB: seeding failed: %s', _e)
     # Enable CORS for frontend dev server and allow credentials for cookie auth
     CORS(app, supports_credentials=True, resources={
         r"/api/*": {"origins": [
