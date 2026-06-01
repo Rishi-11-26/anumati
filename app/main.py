@@ -1,7 +1,7 @@
 from .antigravity import Antigravity
 from flask import request, redirect, make_response, jsonify, send_from_directory
 from flask_cors import CORS
-from .database import SessionLocal
+from .database import SessionLocal, engine, Base
 from sqlalchemy import func, case, or_
 from sqlalchemy.orm import joinedload
 from .models import Faculty, LeaveApplication, DepartmentEnum, RoleEnum, StatusEnum
@@ -13,6 +13,8 @@ import datetime
 
 def create_app():
     app = Antigravity(__name__)
+    # Ensure database tables exist on startup (avoids "no such table" errors in fresh deployments)
+    Base.metadata.create_all(bind=engine)
     # Enable CORS for frontend dev server and allow credentials for cookie auth
     CORS(app, supports_credentials=True, resources={
         r"/api/*": {"origins": [
@@ -440,3 +442,4 @@ def create_app():
         return serve_react_app(path)
 
     return app
+
